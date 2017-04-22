@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ATM Web Worker Fun</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://unpkg.com/vue"></script>
+    <style>
+        .row {
+            margin: 10px;
+            border: 1px solid black;
+        }
+        .col-md-2 > h5 ,
+        .col-md-3 > h5 ,
+        .col-md-4 > h5 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container-fluid">
+            <button @click="run()">Run</button>
+            <button @click="changeColor()" :style="{backgroundColor: btnColor}">Change My Color</button>
+            <textarea style="width: 700px;"></textarea>
+            <div class="row">
+                <div class="col-md-2" style="border-radius: 16px 0 0 0;">
+                    <h5>ATM 0 Work Queue</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in atmQueues[0]">{{t.acct}}    {{t.type}}    {{t.amount}}   {{t.timeout}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5>ATM 1 Work Queue</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in atmQueues[1]">{{t.acct}}    {{t.type}}    {{t.amount}}   {{t.timeout}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-2" style="border-radius: 0 16px 0 0;">
+                    <h5>ATM 2 Work Queue</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in atmQueues[2]">{{t.acct}}    {{t.type}}    {{t.amount}}    {{t.timeout}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Console:</h5>
+                    <textarea id="myConsole" style="width: 315px; height: 360px;" v-model="myConsole"></textarea>
+                </div>
+                <div class="col-md-3">
+                    <h5>Queue:</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in mainQueue">{{t.acct}} {{t.type}} {{t.amount}} {{t.timeout}}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3" style="border-radius: 0 0 0 16px;">
+                    <h5>Cust 0 Transactions</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in custTransactions['00023453']">{{t.atm}} {{t.type}} {{t.amount}} {{t.balance}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Cust 1 Transactions</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in custTransactions['00004444']">{{t.atm}} {{t.type}} {{t.amount}} {{t.balance}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-3" style="border-radius: 0 0 0 0;">
+                    <h5>Cust 2 Transactions</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in custTransactions['10023678']">{{t.atm}} {{t.type}} {{t.amount}} {{t.balance}}</li>
+                    </ul>
+                </div>
+                <div class="col-md-3" style="border-radius: 0 0 16px 0;">
+                    <h5>Cust 3 Transactions</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="t in custTransactions['02034588']">{{t.atm}} {{t.type}} {{t.amount}} {{t.balance}}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script type="text/javascript">
+        var vm = new Vue({
+            el: '#app',
+            data: {
+            	atmQueues: [
+                    [
+                        {
+                            acct: "00023453",
+                            type: "w",
+                            amount: 500,
+                            timeout: 1
+                        },
+                        {
+                            acct: "00023453",
+                            type: "w",
+                            amount: 25,
+                            timeout: 1
+                        },
+                        {
+                            acct: "00023453",
+                            type: "d",
+                            amount: 100,
+                            timeout: 2
+                        },
+                        {
+                            acct: "10023678",
+                            type: 'd',
+                            amount: 10.00,
+                            timeout: 1
+                        },
+                        {
+                            acct: "10023678",
+                            type: 'w',
+                            amount: 100.00,
+                            timeout: 1
+                        },
+                        {
+                            acct: "02034588",
+                            type: 'w',
+                            amount: 500.00,
+                            timeout: 1
+                        },
+                        {
+                            acct: "02034588",
+                            type: 'd',
+                            amount: 100.00,
+                            timeout: 2
+                        },
+                        {
+                            acct: "00004444",
+                            type: 'w',
+                            amount: 60.00,
+                            timeout: 1
+                        },
+                        {
+                            acct: "00004444",
+                            type: 'd',
+                            amount: 10.00,
+                            timeout: 2
+                        }
+                    ],
+                    [
+                        {
+                            acct: "00023453",
+                            type: "w",
+                            amount: 25,
+                            timeout: 1
+                        },
+                        {
+                            acct: "10023678",
+                            type: "w",
+                            amount: 100,
+                            timeout: 1
+                        },
+                        {
+                            acct: "02034588",
+                            type: "w",
+                            amount: 100,
+                            timeout: 1
+                        },
+                        {
+                            acct: "00004444",
+                            type: 'w',
+                            amount: 60.00,
+                            timeout: 1
+                        }
+                    ],
+                    [
+                        {
+                            acct: "10023678",
+                            type: "d",
+                            amount: 10,
+                            timeout: 1
+                        },
+                        {
+                            acct: "10023678",
+                            type: "w",
+                            amount: 90,
+                            timeout: 1
+                        },
+                        {
+                            acct: "02034588",
+                            type: "w",
+                            amount: 300,
+                            timeout: 1
+                        },
+                        {
+                            acct: "00004444",
+                            type: 'w',
+                            amount: 10.00,
+                            timeout: 1
+                        }
+                    ]
+                ],
+                mainQueue: [],
+                custTransactions: {
+	                "00023453": [
+                        {
+                        	balance: 1234.56,
+                            amount: "",
+                            type: "00023453",
+                            atm: ""
+                        }
+                    ],
+                    "00004444": [
+                        {
+	                        balance: 17.43,
+                            amount: "",
+                            type: "00004444",
+                            atm: ""
+                        }
+                    ],
+                    "10023678": [
+                        {
+	                        balance: 212.84,
+                            amount: "",
+                            type: "10023678",
+                            atm: ""
+                        }
+                    ],
+                    "02034588": [
+                        {
+	                        balance: 2456.7,
+                            amount: "",
+                            type: "02034588",
+                            atm: ""
+                        }
+                    ]
+                },
+                myConsole: "",
+                numWorkersDone: 0,
+                btnColor: "red"
+            },
+            watch: {
+            	// This function handles the main queue
+            	mainQueue: function(queue) {
+            		//alert(JSON.stringify(queue));
+            		if (queue.length >= 3) this.processTransactions();
+
+                },
+                numWorkersDone: function(numDone) {
+            		if (numDone === 3) this.processTransactions();
+                }
+            },
+            methods: {
+            	changeColor: function() {
+                    var i = getRandomInt(0, 5);
+                    if (i === 0) {
+                    	this.btnColor = "red";
+                    } else if (i === 1) {
+                    	this.btnColor = "blue";
+                    } else if (i === 2) {
+                    	this.btnColor = "green";
+                    } else if (i === 3) {
+                    	this.btnColor = "yellow";
+                    } else if (i === 4) {
+                    	this.btnColor = "purple";
+                    }
+                },
+            	processTransactions: function() {
+		            for (var i = 0; i < this.mainQueue.length; i++) {
+			            var tempList = this.custTransactions[this.mainQueue[i].acct];
+			            var type = this.mainQueue[i].type;
+			            var previousBalance = tempList[tempList.length-1].balance;
+			            var newBalance = 0;
+			            if (type === "w") {
+			            	newBalance = previousBalance - this.mainQueue[i].amount;
+                        } else {
+			            	newBalance = previousBalance + this.mainQueue[i].amount;
+                        }
+			            this.custTransactions[this.mainQueue[i].acct].push({
+                            balance: newBalance,
+                            amount: this.mainQueue[i].amount,
+                            type: type,
+                            atm: this.mainQueue[i].atm
+                        });
+			            this.myConsole += "atm " + this.mainQueue[i].atm + " " +
+                            this.mainQueue[i].acct + " " + this.mainQueue[i].type + " " +
+                            this.mainQueue[i].amount + "\n";
+		            }
+		            this.mainQueue = [];
+                },
+                run: function() {
+	                // All the web worker parallel code is right here
+	                var workers = [];
+	                for (var i = 0; i < 3; i++) {
+		                var worker = new Worker('atm.js');
+
+		                worker.onmessage = function(message) {
+			                if (message.data === "DONE") {
+				                vm.numWorkersDone++;
+			                } else {
+				                vm.atmQueues[message.data.atm].shift();
+				                vm.mainQueue.push(message.data);
+			                }
+		                };
+
+		                worker.postMessage({id: i, queue: vm.atmQueues[i] });
+		                workers.push(worker);
+	                }
+                }
+            }
+        });
+
+        function getRandomInt(min, max) {
+	        min = Math.ceil(min);
+	        max = Math.floor(max);
+	        return Math.floor(Math.random() * (max - min)) + min;
+        }
+    </script>
+</body>
+</html>
